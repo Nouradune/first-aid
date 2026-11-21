@@ -117,9 +117,9 @@ function bindChips(fn){document.querySelectorAll(".chip[data-c]").forEach(b=>b.o
 
 // كل تسجيل يصل إلى هذا البريد عبر خدمة FormSubmit
 const FORM_ENDPOINT="https://formsubmit.co/ajax/montadr1988@gmail.com";
-function sendData(o){if(FORM_ENDPOINT.includes("PUT_YOUR_ID"))return Promise.resolve();return fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0})}
-function send(u){return sendData({"_subject":"تسجيل جديد في منصة الإسعافات الأولية","الاسم":u.fn,"اللقب":u.ln,"الهاتف":u.ph,"السن":u.ag})}
-function report(pc){const t=S.l.length;const err=S.w.map((q,k)=>(k+1)+") "+q[1]+" | إجابته: "+S.ch[k]+" | الصحيح: "+q[2]).join("\n")||"لا أخطاء";return sendData({"_subject":"نتيجة اختبار: "+user.fn+" "+user.ln+" ("+pc+"%)","الاسم":user.fn,"اللقب":user.ln,"الهاتف":user.ph,"السن":user.ag,"القسم":cat=="all"?"كل الأقسام":cat,"النتيجة":S.s+" من "+t,"المعدل":pc+"%","عدد الأخطاء":S.w.length,"الأخطاء":err}).catch(()=>{})}
+function sendData(o){if(FORM_ENDPOINT.includes("PUT_YOUR_ID"))return Promise.resolve();return fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(o)}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||j.success===false||j.success==="false")throw new Error(j.message||("HTTP "+r.status));return j}))}
+function send(u){return sendData({"_subject":"تسجيل جديد في منصة الإسعافات الأولية","Name":u.fn,"Last name":u.ln,"Phone":u.ph,"Age":u.ag})}
+function report(pc){const t=S.l.length;const err=S.w.map((q,k)=>(k+1)+") "+q[1]+" | إجابته: "+S.ch[k]+" | الصحيح: "+q[2]).join("\n")||"لا أخطاء";return sendData({"_subject":"نتيجة اختبار: "+user.fn+" "+user.ln+" ("+pc+"%)","Name":user.fn,"Last name":user.ln,"Phone":user.ph,"Age":user.ag,"Section":cat=="all"?"كل الأقسام":cat,"Score":S.s+" من "+t,"Percentage":pc+"%","Mistakes count":S.w.length,"Mistakes":err})}
 function auth(){
 app.innerHTML=`<div class="mark"></div><h1>منصة الإسعافات الأولية</h1><p>سجّل بياناتك ثم ابدأ الأسئلة والأجوبة.</p>
 <div class="card">
@@ -136,10 +136,12 @@ const m=["اكتب الاسم (حرفان على الأقل).","اكتب الل�
 if(e.some(Boolean))return;
 user={fn,ln,ph,ag,at:Date.now()};
 const bt=$("#go");bt.disabled=true;bt.textContent="جارٍ التسجيل...";
-send(user).then(()=>{store.set("fa_user",user);home()}).catch(()=>{bt.disabled=false;bt.textContent="تسجيل ومتابعة";$("#e4").textContent="تعذر الإرسال. تأكد من الاتصال بالإنترنت وأعد المحاولة."})}}
+send(user).then(()=>{store.set("fa_user",user);home()}).catch(e=>{bt.disabled=false;bt.textContent="تسجيل ومتابعة";$("#e4").textContent="تعذر الإرسال. تأكد من الاتصال وأعد المحاولة"+(e&&e.message?" ("+e.message+")":"")+"."})}}
 
 function home(){
 const best=store.get("fa_best");
+const dn=store.get("fa_done_"+user.ph);
+if(dn){app.innerHTML=`<div class="top"><div><b>مرحباً ${esc(user.fn)} ${esc(user.ln)}</b></div><button class="lnk" id="out">تسجيل الخروج</button></div><div class="card" style="text-align:center"><h2>انتهى الاختبار</h2><p>نتيجتك هي</p><div class="score">${dn.pc}%</div><p>${dn.s} من ${dn.t} إجابة صحيحة</p></div><button class="btn alt" id="br">تصفح كل الأسئلة والأجوبة</button>`;$("#br").onclick=browse;$("#out").onclick=()=>{try{localStorage.removeItem("fa_user")}catch(e){}user=null;auth()};return}
 app.innerHTML=`<div class="top"><div><b>مرحباً ${esc(user.fn)} ${esc(user.ln)}</b><br><span>السن: ${user.ag} سنة. الهاتف: <bdi>${esc(user.ph)}</bdi></span></div><button class="lnk" id="out">تسجيل الخروج</button></div>
 <div class="card"><h2>اختبار الإسعافات الأولية</h2><p>${Q.length} سؤالاً بمستوى صعب في ${cats.length} أقسام. كل إجابة يظهر معها التصحيح والشرح.${best!=null?` أفضل نتيجة لك: ${best}%.`:""}</p>
 <b>القسم</b>${chips(cat)}<b>عدد الأسئلة</b>
@@ -168,13 +170,13 @@ $("#fb").innerHTML=`<div class="fb ${ok?"g":"r"}"><b>${ok?"إجابة صحيحة
 $("#nx").onclick=()=>{S.i++;S.i<t?ask():done()};$("#nx").focus()})}
 
 function done(){
-const t=S.l.length,pc=Math.round(S.s/t*100),b=store.get("fa_best");
-if(b==null||pc>b)store.set("fa_best",pc);report(pc);
-const msg=pc>=90?"ممتاز، مستواك عالٍ جداً.":pc>=70?"جيد، راجع أخطاءك أدناه.":"تحتاج مراجعة. اقرأ التصحيحات ثم أعد المحاولة.";
-app.innerHTML=`<div class="card" style="text-align:center"><p>${esc(user.fn)} ${esc(user.ln)}</p><div class="score">${pc}%</div><h2>${S.s} من ${t} إجابة صحيحة</h2><p>${msg}</p></div>
-${S.w.length?`<h2>تصحيح أخطائك</h2>`+S.w.map(q=>`<details open><summary>${esc(q[1])}</summary><p><b>${esc(q[2])}</b></p><p>${esc(q[4])}</p></details>`).join(""):"<p>لا أخطاء. أحسنت.</p>"}
-<button class="btn" id="rt">اختبار جديد</button><button class="btn alt" id="hm">الرئيسية</button>`;
-$("#rt").onclick=start;$("#hm").onclick=home}
+const t=S.l.length,pc=Math.round(S.s/t*100);
+store.set("fa_done_"+user.ph,{pc,s:S.s,t});
+app.innerHTML=`<div class="card" style="text-align:center"><h2>انتهى الاختبار</h2><p>نتيجتك هي</p><div class="score">${pc}%</div><p>${S.s} من ${t} إجابة صحيحة</p><p id="st">جارٍ إرسال نتيجتك...</p></div><button class="btn alt" id="hm">الرئيسية</button>`;
+$("#hm").onclick=home;
+const st=$("#st");
+const go=()=>{st.textContent="جارٍ إرسال نتيجتك...";report(pc).then(()=>{st.textContent="تم إرسال نتيجتك."}).catch(e=>{st.textContent="تعذر إرسال النتيجة"+(e&&e.message?" ("+e.message+")":"")+" ";const b=document.createElement("button");b.className="lnk";b.textContent="إعادة الإرسال";b.onclick=go;st.appendChild(b)})};
+go()}
 
 function browse(){
 const l=Q.filter(q=>cat=="all"||q[0]==cat);
