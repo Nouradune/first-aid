@@ -55,19 +55,19 @@ var QS=[
 ["حرق كيميائي على الجلد؟","غسل بماء غزير 20 دقيقة على الأقل","معادلته بمادة مضادة","تغطيته دون غسل","دلك الجلد بقوة"],
 ["جهاز AED (الصادم الآلي)؟","تشغيله واتباع التعليمات الصوتية","لا يُستخدم قبل وصول الإسعاف","يُستخدم على الأطفال فقط","يُستخدم قبل التأكد من توقف التنفس"]
 ];
-var app=document.getElementById("app"),db=null,user=null,isT=false,stu={},seq=[],cur=0,ans=[];
+var app=document.getElementById("app"),db=null,user=null,isT=false,stu={},seq=[],cur=0,ans=[],chosen=[];
 function el(t,x,c,p){var e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;if(p)p.appendChild(e);return e}
 function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 function clear(){app.textContent=""}
 function box(){var c=el("div",null,"card",app);return c}
-function head(){var c=box();el("h1","اختبار الإسعافات الأولية",0,c);el("div","اختبار شامل ومستوى صعب — "+QS.length+" سؤالاً","mu",c)}
+function head(){var c=box();el("h1","اختبار الإسعافات الأولية",0,c);el("div","اختبار شامل ومستوى صعب — "+QS.length+" سؤالاً","mu",c);var n=el("div","نسبة القبول: 60% فأكثر","good",c);n.style.fontWeight="bold"}
 function form(){
   clear();head();var c=box();el("h2","بيانات الطالب",0,c);var f={};
   [["fn","الاسم"],["ln","اللقب"],["ph","رقم الهاتف"],["ag","السن"]].forEach(function(x){el("label",x[1],"mu",c);var i=el("input",null,0,c);i.autocomplete="off";if(x[0]=="ph")i.type="tel";if(x[0]=="ag"){i.type="number";i.min=5;i.max=99}f[x[0]]=i});
   var m=el("div","","err",c);var b=el("button","ابدأ الاختبار","p",c);
   b.onclick=function(){var s={};for(var k in f)s[k]=f[k].value.trim();
     if(!s.fn||!s.ln||s.ph.length<8||!(+s.ag>0)){m.textContent="يرجى ملء جميع الحقول بشكل صحيح";return}
-    stu=s;seq=shuf(QS.map(function(_,i){return i}));cur=0;ans=[];ask()};
+    stu=s;seq=shuf(QS.map(function(_,i){return i}));cur=0;ans=[];chosen=[];ask()};
 }
 function ask(){
   clear();var qi=seq[cur],q=QS[qi];var c=box();
@@ -76,20 +76,20 @@ function ask(){
   var sel=-1,opts=shuf([0,1,2,3]);var nx=null;
   var bs=opts.map(function(o){var b=el("button",q[o+1],0,c);b.onclick=function(){sel=o;bs.forEach(function(x){x.className=""});b.className="sel";nx.disabled=false};return b});
   nx=el("button",cur+1<seq.length?"التالي":"إنهاء الاختبار","p",c);nx.disabled=true;
-  nx.onclick=function(){ans.push(sel===0?1:0);cur++;if(cur<seq.length)ask();else finish()};
+  nx.onclick=function(){ans.push(sel===0?1:0);chosen.push(q[sel+1]);cur++;if(cur<seq.length)ask();else finish()};
 }
 function finish(){
   clear();var c=box();el("h1","اكتمل الاختبار",0,c);
-  var wrong=[],score=0;ans.forEach(function(r,k){if(r)score++;else wrong.push(seq[k])});
+  var wrong=[],score=0;ans.forEach(function(r,k){if(r)score++;else wrong.push({i:seq[k],c:chosen[k]})});
   var p=Math.round(score/seq.length*100);
-  el("h2","نتيجتك: "+score+" من "+seq.length+" ("+p+"%)",p>=50?"good":"bad",c);
-  el("div","اضغط الزر التالي لإرسال نتيجتك إلى المعلمة عبر واتساب.","mu",c);
-  var t="نتيجة اختبار الإسعافات الأولية\nالاسم: "+stu.fn+" "+stu.ln+"\nالهاتف: "+stu.ph+"\nالسن: "+stu.ag+"\nالنتيجة: "+score+"/"+seq.length+" ("+p+"%)\n";
-  if(wrong.length){t+="\nالأخطاء:\n";wrong.forEach(function(i){var q=QS[i];t+="- "+q[0].slice(0,45)+" ← الصحيح: "+q[1]+"\n"})}else t+="\nلا أخطاء";
+  var ok=p>=60;el("h2","نتيجتك: "+score+" من "+seq.length+" ("+p+"%) — "+(ok?"مقبول":"غير مقبول"),ok?"good":"bad",c);
+  el("div","اضغط الزر التالي لإرسال نتيجتك إلى المكوّن عبر واتساب.","mu",c);
+  var t="نتيجة اختبار الإسعافات الأولية\nالاسم: "+stu.fn+" "+stu.ln+"\nالهاتف: "+stu.ph+"\nالسن: "+stu.ag+"\nالنتيجة: "+score+"/"+seq.length+" ("+p+"%) — "+(ok?"مقبول":"غير مقبول")+"\n";
+  if(wrong.length){t+="\nالأخطاء:\n";wrong.forEach(function(w){var q=QS[w.i];t+="- ("+(w.i+1)+") "+q[0].slice(0,40)+"\n  إجابته: "+w.c+"\n  الصحيح: "+q[1]+"\n"})}else t+="\nلا أخطاء";
   var b=el("button","إرسال النتيجة عبر واتساب","p",c);
   b.onclick=function(){location.href="https://wa.me/"+TEACHER_PHONE+"?text="+encodeURIComponent(t)};
 }
-var TEACHER_PHONE="213666214482"; // رقم المعلمة بصيغة دولية بلا + ولا أصفار (مثال: 213550123456)
+var TEACHER_PHONE="213666214482"; // رقم المكوّن بصيغة دولية بلا + ولا أصفار (مثال: 213550123456)
 form();
 </script>
 </body>
