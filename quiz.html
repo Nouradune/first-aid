@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>اختبار الإسعافات الأولية</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mu:#667085;--pr:#d92d20;--bd:#e4e7ec;--ok:#12803c;--no:#b42318;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171c;--card:#1e2329;--tx:#eef0f3;--mu:#98a2b3;--bd:#323a44;--pr:#f04438;--ok:#47cd89;--no:#f97066;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Tahoma,"Segoe UI",Arial,sans-serif;line-height:1.7}
+main{max-width:640px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px}
+h1{font-size:1.3rem;margin:0 0 6px;color:var(--pr)}h2{font-size:1.05rem;margin:0 0 12px}
+input{width:100%;box-sizing:border-box;padding:12px;margin:6px 0 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:12px;width:100%;margin:6px 0;text-align:right}
+button.p{background:var(--pr);color:#fff;border-color:var(--pr);text-align:center;font-weight:bold}
+button.sel{border-color:var(--pr);background:color-mix(in srgb,var(--pr) 12%,var(--card))}
+.mu{color:var(--mu);font-size:.9rem}.bar{height:6px;background:var(--bd);border-radius:6px;margin-bottom:14px}.bar i{display:block;height:100%;background:var(--pr);border-radius:6px}
+.tabs{display:flex;gap:8px}.tabs button{text-align:center}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}
+.bad{color:var(--no)}.good{color:var(--ok)}.err{color:var(--no);font-size:.9rem}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// [السؤال، الإجابة الصحيحة، خطأ، خطأ، خطأ]
+var QS=[
+["أول خطوة عند الوصول إلى مكان الحادث؟","تأمين المكان وسلامة المسعف","نقل المصاب فوراً","إعطاء المصاب ماء","الاتصال بأهل المصاب"],
+["نسبة الضغطات إلى النفخات في الإنعاش القلبي الرئوي للبالغ (مسعف واحد)؟","30 : 2","15 : 2","5 : 1","30 : 5"],
+["عمق الضغطات الصدرية عند البالغ؟","5 – 6 سم","2 – 3 سم","8 – 10 سم","1 سم"],
+["معدل الضغطات الصدرية الصحيح؟","100 – 120 في الدقيقة","60 – 80 في الدقيقة","80 – 100 في الدقيقة","140 – 160 في الدقيقة"],
+["موضع اليدين أثناء الضغط الصدري؟","النصف السفلي من عظمة القص","أعلى البطن","الجانب الأيسر من الصدر","الترقوة"],
+["نزيف شديد من الذراع؟","ضغط مباشر بضمادة نظيفة","رفع الرأس فقط","غسل الجرح بماء ساخن","نزع الضمادة المبللة وتبديلها باستمرار"],
+["حرق بسيط من الدرجة الأولى؟","تبريد بماء جارٍ 10 – 20 دقيقة","وضع معجون الأسنان","وضع الزبدة","تفقيع الفقاعات"],
+["بالغ مختنق بجسم غريب ولا يستطيع السعال أو الكلام؟","5 ضربات بين الكتفين ثم 5 دفعات بطنية","إعطاؤه ماء","الانتظار حتى يهدأ","إمالة رأسه للخلف"],
+["رضيع مختنق بجسم غريب؟","ضربات على الظهر وضغطات صدرية","دفعات بطنية قوية","إدخال الإصبع في فمه عشوائياً","رفعه من قدميه فقط"],
+["وضع الإفاقة (الاستقرار) يُستخدم لـ؟","فاقد الوعي ويتنفس طبيعياً","من توقف قلبه","الشخص الواعي تماماً","من لديه نزيف حاد في الساق فقط"],
+["علامات السكتة الدماغية (FAST)؟","تدلي الوجه وضعف الذراع واضطراب الكلام","حمى وسعال","ألم في البطن وإسهال","طفح جلدي وحكة"],
+["كسر مشتبه في الساق؟","تثبيت الطرف دون محاولة تعديله","محاولة إعادة العظم لمكانه","تدليك مكان الكسر","جعله يمشي عليه"],
+["إصابة مشتبهة في العنق أو العمود الفقري؟","تثبيت الرأس والعنق وعدم تحريك المصاب","إجلاسه فوراً","سحبه من ذراعيه","هزّه لإيقاظه"],
+["لدغة أفعى؟","تهدئة المصاب وتثبيت الطرف ونقله للمستشفى","شفط السم بالفم","ربط الطرف بشدة كعاصبة","شق مكان اللدغة"],
+["مصاب في حالة صدمة (Shock) دون كسور؟","استلقاء مع رفع الساقين وتغطيته","إجلاسه","إعطاؤه ماء ليشرب","وقوفه ومشيه"],
+["أثناء نوبة صرع؟","إبعاد الأخطار وحماية الرأس","وضع ملعقة في فمه","تثبيته بالقوة","إعطاؤه ماء"],
+["نزيف الأنف؟","جلوس مع إمالة الرأس للأمام وضغط الأنف","إمالة الرأس للخلف","الاستلقاء على الظهر","حشو الأنف بقطن عميق"],
+["شخص أُغمي عليه وهو يتنفس؟","استلقاء مع رفع الساقين وتفقد التنفس","صفعه بقوة","إعطاؤه طعاماً","إجلاسه فوراً"],
+["ضربة شمس؟","نقله لمكان بارد وتبريد جسمه بسرعة","إعطاؤه شاياً ساخناً","تغطيته ببطانية","تركه في الشمس"],
+["ابتلاع مادة كاوية؟","عدم إحداث القيء وطلب الإسعاف فوراً","إحداث القيء","إعطاؤه خلاً","إعطاؤه حليباً بكميات كبيرة دون استشارة"],
+["شخص مصعوق كهربائياً؟","قطع التيار قبل لمس المصاب","لمسه فوراً","رش الماء عليه","سحبه بيد عارية"],
+["رقم النجدة للحماية المدنية في الجزائر؟","14","17","19","15"],
+["انخفاض سكر الدم لدى شخص واعٍ؟","إعطاؤه سكراً أو عصيراً","إعطاؤه قهوة بدون سكر","إعطاؤه ماء فقط","تركه ينام"],
+["جسم غريب مغروس في الجرح؟","تثبيته والضغط حوله دون نزعه","نزعه فوراً","تحريكه لتنظيفه","سحبه بملقط"],
+["غريق توقف تنفسه بعد إنقاذه؟","5 نفخات إنقاذ ثم ضغطات صدرية","ضغطات فقط دون نفخات","الضغط على بطنه لإخراج الماء","تركه ليتنفس وحده"],
+["حرق كيميائي على الجلد؟","غسل بماء غزير 20 دقيقة على الأقل","معادلته بمادة مضادة","تغطيته دون غسل","دلك الجلد بقوة"],
+["جهاز AED (الصادم الآلي)؟","تشغيله واتباع التعليمات الصوتية","لا يُستخدم قبل وصول الإسعاف","يُستخدم على الأطفال فقط","يُستخدم قبل التأكد من توقف التنفس"]
+];
+var app=document.getElementById("app"),db=null,user=null,isT=false,stu={},seq=[],cur=0,ans=[];
+function el(t,x,c,p){var e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;if(p)p.appendChild(e);return e}
+function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function clear(){app.textContent=""}
+function box(){var c=el("div",null,"card",app);return c}
+function head(){var c=box();el("h1","اختبار الإسعافات الأولية",0,c);el("div","اختبار شامل ومستوى صعب — "+QS.length+" سؤالاً","mu",c)}
+function form(){
+  clear();head();var c=box();el("h2","بيانات الطالب",0,c);var f={};
+  [["fn","الاسم"],["ln","اللقب"],["ph","رقم الهاتف"],["ag","السن"]].forEach(function(x){el("label",x[1],"mu",c);var i=el("input",null,0,c);i.autocomplete="off";if(x[0]=="ph")i.type="tel";if(x[0]=="ag"){i.type="number";i.min=5;i.max=99}f[x[0]]=i});
+  var m=el("div","","err",c);var b=el("button","ابدأ الاختبار","p",c);
+  b.onclick=function(){var s={};for(var k in f)s[k]=f[k].value.trim();
+    if(!s.fn||!s.ln||s.ph.length<8||!(+s.ag>0)){m.textContent="يرجى ملء جميع الحقول بشكل صحيح";return}
+    stu=s;seq=shuf(QS.map(function(_,i){return i}));cur=0;ans=[];ask()};
+}
+function ask(){
+  clear();var qi=seq[cur],q=QS[qi];var c=box();
+  var bar=el("div",null,"bar",c);var i=el("i");i.style.width=(cur/seq.length*100)+"%";bar.appendChild(i);
+  el("div","السؤال "+(cur+1)+" من "+seq.length,"mu",c);el("h2",q[0],0,c);
+  var sel=-1,opts=shuf([0,1,2,3]);var nx=null;
+  var bs=opts.map(function(o){var b=el("button",q[o+1],0,c);b.onclick=function(){sel=o;bs.forEach(function(x){x.className=""});b.className="sel";nx.disabled=false};return b});
+  nx=el("button",cur+1<seq.length?"التالي":"إنهاء الاختبار","p",c);nx.disabled=true;
+  nx.onclick=function(){ans.push(sel===0?1:0);cur++;if(cur<seq.length)ask();else finish()};
+}
+function finish(){
+  clear();var c=box();el("h1","اكتمل الاختبار",0,c);
+  var wrong=[],score=0;ans.forEach(function(r,k){if(r)score++;else wrong.push(seq[k])});
+  var p=Math.round(score/seq.length*100);
+  el("h2","نتيجتك: "+score+" من "+seq.length+" ("+p+"%)",p>=50?"good":"bad",c);
+  el("div","اضغط الزر التالي لإرسال نتيجتك إلى المعلمة عبر واتساب.","mu",c);
+  var t="نتيجة اختبار الإسعافات الأولية\nالاسم: "+stu.fn+" "+stu.ln+"\nالهاتف: "+stu.ph+"\nالسن: "+stu.ag+"\nالنتيجة: "+score+"/"+seq.length+" ("+p+"%)\n";
+  if(wrong.length){t+="\nالأخطاء:\n";wrong.forEach(function(i){var q=QS[i];t+="- "+q[0].slice(0,45)+" ← الصحيح: "+q[1]+"\n"})}else t+="\nلا أخطاء";
+  var b=el("button","إرسال النتيجة عبر واتساب","p",c);
+  b.onclick=function(){location.href="https://wa.me/"+TEACHER_PHONE+"?text="+encodeURIComponent(t)};
+}
+var TEACHER_PHONE="213666214482"; // رقم المعلمة بصيغة دولية بلا + ولا أصفار (مثال: 213550123456)
+form();
+</script>
+</body>
+</html>
